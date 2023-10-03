@@ -1,26 +1,43 @@
-import requests
-from send_email import send_email
+from flask import Flask, render_template
 
-topic = "tesla"
-
-api_key = "4668a70e6c354de8a9e5c66c5edf6816"
-url =   "https://newsapi.org/v2/everything?" \
-        f"q={topic}&" \
-        "sortBy=publishedAt&" \
-        "apiKey=4668a70e6c354de8a9e5c66c5edf6816&" \
-        "language=en"
-
-# make request
-request = requests.get(url)
-content["articles"][:20]:
-    if article["title"] is not None:
-        body = "Subject:Today's news" \
-            +"\n" + body + article["title"] + "\n"\
-            + article["description"] + "\n" \
-            + article["url"]+2*"\n"
-
-body = body.encode("utf-8")
-send_email(message=body)
+import pandas as pd
 
 
 
+app = Flask(__name__)
+@app.route("/")
+def home():
+    return render_template("home.html")
+
+@app.route("/api/v1/<station>/<date>")
+def about(station, date):
+    filename = "data_small/TG_STAID" + str(station).zfill(6) + ".txt"
+    df = pd.read_csv(filename,skiprows=20, parse_dates=["    DATE"])
+    temperature = df.loc[df["    DATE"] == date]["   TG"].squeeze()/10
+
+    return {"station":station,
+            "date":date,
+           "temperature":temperature}
+
+@app.route("/api/v1/<station>")
+def all_data(station):
+    filename = "data_small/TG_STAID" + str(station).zfill(6) + ".txt"
+    df = pd.read_csv(filename, skiprows=20, parse_dates=["    DATE"])
+    result = df.to_dict(orient='records')
+    return result
+@app.route("/api/v1/yearly/<station>/<year>")
+def yearly(station,year):
+    filename = "data_small/TG_STAID" + str(station).zfill(6) + ".txt"
+    df = pd.read_csv(filename, skiprows=20)
+    df["    DATE"] = df["    DATE"].astype(str)
+    result = df[df["    DATE"].str.startswith(str(year))].to_dict(orient="records")
+    return result
+#@app.route("/api/v1/<word>/")
+#def api(word):
+#    definition = word.upper()
+#    result_dictionery = {'word': word, 'definition':definition}
+ #   return result_dictionery
+
+
+if __name__== "__main__":
+    app.run(debug=True)
