@@ -1,30 +1,26 @@
-from flask import Flask, render_template
+import requests
+from send_email import send_email
 
-import pandas as pd
+topic = "tesla"
 
+api_key = "4668a70e6c354de8a9e5c66c5edf6816"
+url =   "https://newsapi.org/v2/everything?" \
+        f"q={topic}&" \
+        "sortBy=publishedAt&" \
+        "apiKey=4668a70e6c354de8a9e5c66c5edf6816&" \
+        "language=en"
 
+# make request
+request = requests.get(url)
+content["articles"][:20]:
+    if article["title"] is not None:
+        body = "Subject:Today's news" \
+            +"\n" + body + article["title"] + "\n"\
+            + article["description"] + "\n" \
+            + article["url"]+2*"\n"
 
-app = Flask(__name__)
-@app.route("/")
-def home():
-    return render_template("home.html")
-
-@app.route("/api/v1/<station>/<date>")
-def about(station, date):
-    filename = "data_small/TG_STAID" + str(station).zfill(6) + ".txt"
-    df = pd.read_csv(filename,skiprows=20, parse_dates=["    DATE"])
-    temperature = df.loc[df["    DATE"] == date]["   TG"].squeeze()/10
-
-    return {"station":station,
-            "date":date,
-            "temperature":temperature}
-
-#@app.route("/api/v1/<word>/")
-#def api(word):
-#    definition = word.upper()
-#    result_dictionery = {'word': word, 'definition':definition}
-#   return result_dictionery
+body = body.encode("utf-8")
+send_email(message=body)
 
 
-if __name__== "__main__":
-    app.run(debug=True, port=5000)
+
